@@ -44,4 +44,9 @@ resource "docker_container" "nginx" {
     container_path = "/var/log/nginx"
     read_only      = false
   }
+  volumes {
+    host_path      = "/var/www/html"
+    container_path = "/var/www/html"
+    read_only      = false
+  }
 }
