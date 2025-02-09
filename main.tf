@@ -1,6 +1,3 @@
-module "terraform-test" {
-  source = "./hosts"
-  providers = {
-    docker.terraform-test-ct = docker.terraform-test-ct
-  }
+module "home-gateway" {
+  source = "./hosts/home-gateway"
 }
