@@ -67,10 +67,44 @@ variable "garage_rpc_host" {
   default = "192.168.0.162"
 }
 
-resource "local_file" "garage_config" {
-  content = templatefile("${path.module}/../../templates/garage/garage.toml.tpl", {
-    rpc_secret = var.garage_rpc_secret
-    rpc_host = var.garage_rpc_host
-  })
-  filename = "${path.module}/garage/garage.toml"
+resource "docker_image" "garage" {
+  provider = docker.selena
+  name = "dxflrs/garage:v1.0.0"
+  keep_locally = false
+}
+
+resource "docker_container" "garage" {
+  provider = docker.selena
+  name = "garaged"
+  image = docker_image.garage.image_id
+  
+  upload {
+    content = templatefile("${path.module}/../../templates/garage/garage.toml.tpl", {
+      rpc_secret = var.garage_rpc_secret
+      rpc_host = var.garage_rpc_host
+    })
+    file = "/etc/garage.toml"
+  }
+
+  volumes {
+    host_path      = "/nvme0n1/garage/meta"
+    container_path = "/var/lib/garage/meta"
+  }
+  volumes {
+    host_path      = "/nvme0n1/garage/data"
+    container_path = "/var/lib/garage/data"
+  }
+  
+  ports {
+    internal = 3900
+    external = 3900
+  }
+  ports {
+    internal = 3901
+    external = 3901
+  }
+  ports {
+    internal = 3902
+    external = 3902
+  }
 }
