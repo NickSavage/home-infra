@@ -56,3 +56,21 @@ resource "docker_container" "metube" {
   }
 
 }
+variable "garage_rpc_secret" {
+  type        = string
+  description = "The secret for the garage RPC"
+}
+
+variable "garage_rpc_host" {
+  type = string
+  description = "The host's IP"
+  default = "192.168.0.162"
+}
+
+resource "local_file" "garage_config" {
+  content = templatefile("${path.module}/../../templates/garage/garage.toml.tpl", {
+    rpc_secret = var.garage_rpc_secret
+    rpc_host = var.garage_rpc_host
+  })
+  filename = "${path.module}/garage/garage.toml"
+}
