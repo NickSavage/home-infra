@@ -27,10 +27,6 @@ resource "docker_container" "metube" {
   name = "metube"
   image = docker_image.metube.image_id
 
-  ports {
-    internal = 8081
-    external = 8091
-  }
   volumes {
     host_path      = "/home/media/downloads"
     container_path = "/downloads"
@@ -108,3 +104,21 @@ resource "docker_container" "garage" {
     external = 3902
   }
 }
+
+resource "docker_image" "ollama" {
+  provider = docker.selena
+  name = "ollama/ollama:latest"
+  keep_locally = false
+}
+
+resource "docker_container" "ollama" {
+  provider = docker.selena
+  name = "ollama"
+  image = docker_image.ollama.image_id
+
+  ports {
+    internal = 11434
+    external = 11434
+  }
+}
+
