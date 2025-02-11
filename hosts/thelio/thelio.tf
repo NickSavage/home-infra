@@ -65,3 +65,57 @@ resource "docker_container" "garage" {
     external = 3902
   }
 }
+
+resource "docker_image" "traefik" {
+  provider = docker.thelio
+  name = "traefik:v3.2"
+  keep_locally = false
+}
+
+resource "docker_network" "traefik_internal" {
+  provider = docker.thelio
+  name = "traefik_internal"
+  attachable = true
+  ipam_config {
+    subnet  = "10.0.1.0/24"
+    gateway = "10.0.1.254"
+  }
+}
+
+resource "docker_container" "traefik" {
+  provider = docker.thelio
+  name = "traefik"
+  image = docker_image.traefik.image_id
+
+  volumes {
+    host_path      = "/var/run/docker.sock"
+    container_path = "/var/run/docker.sock"
+    read_only      = false
+  }
+  ports {
+    internal = 80
+    external = 80
+  }
+  ports {
+    internal = 443
+    external = 443
+  }
+  ports {
+    internal = 8080
+    external = 8080
+  }
+  networks_advanced {
+    name = docker_network.traefik_internal.name
+  }
+
+  command = [
+    "--api.insecure=true",
+    "--providers.docker",
+    "--entrypoints.web.address=:80",
+    "--entrypoints.websecure.address=:443",
+    "--providers.file.directory=/etc/traefik/dynamic",
+    "--providers.file.watch=true"
+  ]
+
+}
+
