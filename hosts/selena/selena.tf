@@ -122,3 +122,60 @@ resource "docker_container" "ollama" {
   }
 }
 
+
+resource "docker_image" "traefik" {
+  provider = docker.selena
+  name = "traefik:v3.3"
+  keep_locally = false
+}
+
+data "docker_network" "traefik_internal" {
+  provider = docker.selena
+  name = "internal"
+}
+
+resource "docker_container" "traefik" {
+  provider = docker.selena
+  name = "traefik"
+  image = docker_image.traefik.image_id
+
+  volumes {
+    host_path      = "/var/run/docker.sock"
+    container_path = "/var/run/docker.sock"
+    read_only      = false
+  }
+  volumes {
+    host_path = "/nvme0n1/data/data/config/traefik/dynamic"
+    container_path = "/etc/traefik/dynamic"
+  }
+  volumes {
+    host_path = "/nvme0n1/data/data/config/traefik/certs"
+    container_path = "/etc/traefik/certs"
+  }
+
+  ports {
+    internal = 80
+    external = 80
+  }
+  ports {
+    internal = 443
+    external = 443
+  }
+  ports {
+    internal = 8080
+    external = 8080
+  }
+  networks_advanced {
+    name = data.docker_network.traefik_internal.name
+  }
+
+  command = [
+    "--api.insecure=true",
+    "--providers.docker",
+    "--entrypoints.web.address=:80",
+    "--entrypoints.websecure.address=:443",
+    "--providers.file.directory=/etc/traefik/dynamic",
+    "--providers.file.watch=true"
+  ]
+}
+

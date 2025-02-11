@@ -68,7 +68,7 @@ resource "docker_container" "garage" {
 
 resource "docker_image" "traefik" {
   provider = docker.thelio
-  name = "traefik:v3.2"
+  name = "traefik:v3.3"
   keep_locally = false
 }
 
