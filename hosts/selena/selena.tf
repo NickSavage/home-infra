@@ -179,3 +179,54 @@ resource "docker_container" "traefik" {
   ]
 }
 
+resource "docker_image" "sonarr" {
+  provider = docker.selena
+  name = "hotio/sonarr:latest"
+  keep_locally = false
+}
+
+resource "docker_container" "sonarr" {
+  provider = docker.selena
+  name = "sonarr"
+  image = docker_image.sonarr.image_id
+
+  restart = "unless-stopped"
+
+  networks_advanced {
+    name = data.docker_network.traefik_internal.name
+  }
+
+  labels {
+    label = "traefik.enable"
+    value = "true"
+  }
+  labels {
+    label = "traefik.http.routers.sonarr.rule"
+    value = "Host(`sonarr.thesavages.ca`)"
+  }
+  labels {
+    label = "traefik.http.routers.sonarr.entrypoints"
+    value = "web"
+  }
+  labels {
+    label = "traefik.http.services.sonarr.loadbalancer.server.port"
+    value = "8989"
+  }
+
+  volumes {
+    host_path      = "/home/media/torrents"
+    container_path = "/downloads"
+  }
+  volumes {
+    host_path      = "/home/media/tv"
+    container_path = "/tv"
+  }
+  volumes {
+    host_path      = "/nvme0n1/data/data/config/sonarr"
+    container_path = "/config"
+  }
+  volumes {
+    host_path = "/dev/rtc"
+    container_path = "/dev/rtc"
+}
+}
