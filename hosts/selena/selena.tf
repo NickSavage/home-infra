@@ -230,3 +230,47 @@ resource "docker_container" "sonarr" {
     container_path = "/dev/rtc"
 }
 }
+
+resource "docker_image" "qbittorrent" {
+  provider = docker.selena
+  name = "linuxserver/qbittorrent:4.5.5"
+  keep_locally = false
+}
+
+resource "docker_container" "qbittorrent" {
+  provider = docker.selena
+  name = "qbittorrent"
+  image = docker_image.qbittorrent.image_id
+
+  env = [
+    "PUID=1000",
+    "PGID=100",
+    "WEBUI_PORT=8090"
+  ]
+  
+  ports {
+    internal = 8090
+    external = 8090
+  }
+  ports {
+    internal = 6881
+    external = 6881
+    protocol = "tcp"
+  }
+  ports {
+    internal = 6881
+    external = 6881
+    protocol = "udp"
+  }
+  
+  volumes {
+    host_path      = "/home/media/torrents"
+    container_path = "/downloads"
+  }
+  volumes {
+    host_path      = "/nvme0n1/data/data/config/qbittorrent"
+    container_path = "/config"
+  }
+  
+  
+}
